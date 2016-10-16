@@ -7,20 +7,23 @@ const nodemon = require('nodemon');
 
 const tsProject = ts.createProject('tsconfig.json');
 
-gulp.task('default', ['foo', 'watch'], () => {
+gulp.task('default', ['build', 'watch'], () => {
   nodemon({
     script: 'dist/server/index.js',
     ignore: ["**/*.*"], // Only using nodemon to trigger restart
     nodeArgs: ['--debug']
+  })
+  .once('exit', function () {
+    process.exit();
   });
 });
 
 gulp.task('watch', () => {
   const watchPath = path.join(__dirname, '/src/**/*.ts');
-  gulp.watch([watchPath], ['foo']);
+  gulp.watch([watchPath], ['build']);
 });
 
-gulp.task('foo', () => {
+gulp.task('build', () => {
   const tsResult = tsProject.src() // instead of gulp.src(...) 
   .pipe(sourcemaps.init()) // This means sourcemaps will be generated
   .pipe(tsProject());
@@ -30,11 +33,4 @@ gulp.task('foo', () => {
   return tsResult.js
   .pipe(sourcemaps.write()) // Now the sourcemaps are added to the .js file
   .pipe(gulp.dest('dist'));
-});
-
-// Get a clean exit when you kill the process with "ctrl + c"
-process.once('SIGINT', function() {
-  nodemon.once('exit', function() {
-    process.exit();
-  });
 });
