@@ -1,17 +1,30 @@
 /**
  * Entry point for the server
  */
-import * as bluebird from 'bluebird';
-import * as express from 'express';
+import * as path from 'path';
+import * as http from 'http';
 
-const app = express();
-const startTime: Date = new Date();
+import { KoaApp } from './KoaApp';
 
-app.get('/', async (req, res) => {
-  await bluebird.delay(5000);
-  res.send(`Hello World! Server last started at ${startTime}`);
+process.on('uncaughtException', (err) => {
+  console.log('errr?', err);
 });
 
-app.listen(3000, () => {
-  console.log('Example app listening on port 3000!');
-});
+async function setupApp() {
+  try {
+    const app = new KoaApp();
+    await app.initialize();
+    const server = http.createServer(app.app.callback());
+
+    /**
+     * Listen on provided port, on all network interfaces.
+     * Port is set per the .env file, and falls back on port 9000
+     */
+    const port: Number = process.env.PORT || 9000;
+    server.listen(port);
+  } catch (ex) {
+    throw ex;
+  }
+}
+
+setupApp();
